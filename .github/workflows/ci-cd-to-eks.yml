@@ -1,7 +1,5 @@
-# Copyright (C) 2024 The OpenTelemetry Authors
+# Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
-# This workflow file is licensed under the Apache License, Version 2.0.
-# You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
 
 name: CI/CD Pipeline
 
@@ -28,11 +26,9 @@ jobs:
 
       # Step 3: Build and push Docker image
       - name: Build and push Docker image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          tags: ${{ secrets.DOCKER_USERNAME }}/my-app:${{ github.sha }}
-          push: true
+        run: |
+          docker-compose -f docker-compose.yml build
+          docker-compose -f docker-compose.yml push
 
       # Step 4: Run automated tests
       - name: Run tests
