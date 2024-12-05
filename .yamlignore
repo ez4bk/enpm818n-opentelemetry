@@ -1,2 +1,3 @@
 kubernetes/opentelemetry-demo.yaml
 kubernetes/output/*
+.github/workflows/*
