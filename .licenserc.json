@@ -47,6 +47,7 @@
         "src/productcatalogservice/genproto/",
         "src/recommendationservice/demo_pb2.py",
         "src/recommendationservice/demo_pb2_grpc.py",
-        "internal/tools/"
+        "internal/tools/",
+        "kubernetes/output/"
     ]
   }
