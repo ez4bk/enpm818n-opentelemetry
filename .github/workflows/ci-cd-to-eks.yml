@@ -73,3 +73,47 @@ jobs:
               echo "Checking rollout status for deployment: $deployment"
               kubectl rollout status deployment/$deployment -n $namespace
           done
+      
+      - name: Validate application health
+        run: |
+          namespace="otel-demo"
+          service_name="opentelemetry-demo-frontendproxy"
+          retries=5
+          success=false
+
+          for ((i=0; i<$retries; i++)); do
+            echo "Checking health of $service_name in namespace $namespace (Attempt $((i+1)))"
+            
+            # Get the external IP or LoadBalancer endpoint
+            endpoint=$(kubectl get svc $service_name -n $namespace -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+            
+            if [[ -z "$endpoint" ]]; then
+              echo "Waiting for LoadBalancer IP/hostname..."
+              sleep 10
+              continue
+            fi
+
+            # Perform health check
+            if curl -f http://$endpoint/health; then
+              echo "Health check passed!"
+              success=true
+              break
+            else
+              echo "Health check failed. Retrying..."
+              sleep 10
+            fi
+          done
+
+          if [ "$success" = false ]; then
+            echo "Health check failed after $retries attempts."
+            exit 1
+          fi
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "Deployment failed. Rolling back to the last stable version."
+          namespace="otel-demo"
+          for deployment in $(kubectl get deployments -n $namespace -o jsonpath='{.items[*].metadata.name}'); do
+              kubectl rollout undo deployment/$deployment -n $namespace
+          done
