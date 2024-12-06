@@ -34,18 +34,18 @@ spec:
           ports:
             - containerPort: 8080
               name: service
-            readinessProbe:
-              httpGet:
-                path: /health
-                port: 80
-              initialDelaySeconds: 5
-              periodSeconds: 10
-            livenessProbe:
-              httpGet:
-                path: /health
-                port: 80
-              initialDelaySeconds: 10
-              periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
           env:
             - name: OTEL_SERVICE_NAME
               valueFrom:
