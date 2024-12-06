@@ -34,7 +34,8 @@ jobs:
           docker-compose -f docker-compose.yml build
 
       # Step 4: Run automated tests
-      - name: "Run CI Test"
+      - name: Run CI Test
         uses: actions/checkout@v4
+      - name: Run tracetesting
         run: |
           make build && docker system prune -f && make run-tracetesting
