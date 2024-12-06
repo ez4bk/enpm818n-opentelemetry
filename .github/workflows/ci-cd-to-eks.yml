@@ -39,3 +39,37 @@ jobs:
       - name: Run tracetesting
         run: |
           make build && docker system prune -f && make run-tracetesting
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Configure AWS credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1 # Change to your EKS region
+
+      # Step 3: Decode and configure kubeconfig
+      - name: Set up kubectl
+        run: |
+          echo "${{ secrets.KUBECONFIG_BASE64 }}" | base64 --decode > kubeconfig
+          export KUBECONFIG=kubeconfig
+
+      # Step 4: Apply Kubernetes manifests
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply --namespace otel-demo -f ./kubernetes/output --recursive
+          
+      # Step 5: Wait for roll out
+      - name: Wait for all deployments to roll out
+        run: |
+          namespace="otel-demo" # Update with your namespace
+          for deployment in $(kubectl get deployments -n $namespace -o jsonpath='{.items[*].metadata.name}'); do
+              echo "Checking rollout status for deployment: $deployment"
+              kubectl rollout status deployment/$deployment -n $namespace
+          done
