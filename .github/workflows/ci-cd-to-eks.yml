@@ -35,9 +35,6 @@ jobs:
 
       # Step 4: Run automated tests
       - name: "Run CI Test"
-        if: github.event.review.state == 'APPROVED'
-      - name: check out code
         uses: actions/checkout@v4
-      - name: run tracetesting
         run: |
           make build && docker system prune -f && make run-tracetesting
