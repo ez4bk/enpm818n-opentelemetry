@@ -94,7 +94,7 @@ jobs:
             fi
 
             # Perform health check
-            if curl -f http://$endpoint/health; then
+            if curl -f http://$endpoint/; then
               echo "Health check passed!"
               success=true
               break
