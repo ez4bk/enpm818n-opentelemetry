@@ -78,7 +78,7 @@ jobs:
         run: |
           namespace="otel-demo"
           service_name="opentelemetry-demo-frontendproxy"
-          retries=5
+          retries=10
           success=false
 
           for ((i=0; i<$retries; i++)); do
