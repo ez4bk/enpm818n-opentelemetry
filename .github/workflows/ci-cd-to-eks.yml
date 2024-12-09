@@ -115,5 +115,13 @@ jobs:
           echo "Deployment failed. Rolling back to the last stable version."
           namespace="otel-demo"
           for deployment in $(kubectl get deployments -n $namespace -o jsonpath='{.items[*].metadata.name}'); do
-              kubectl rollout undo deployment/$deployment -n $namespace
+              echo "Checking rollout history for deployment: $deployment"
+              # Check if rollback history exists
+              if kubectl rollout history deployment/$deployment -n $namespace --revision=0 2>&1 | grep -q "no rollout history found"; then
+                  echo "No rollout history found for deployment $deployment. Skipping rollback."
+              else
+                  echo "Rolling back deployment: $deployment"
+                  kubectl rollout undo deployment/$deployment -n $namespace
+                  echo "Rollback completed for deployment: $deployment"
+              fi
           done
