@@ -60,34 +60,20 @@ jobs:
           aws eks update-kubeconfig --region us-east-1 --name OT-Cluster
           kubectl get nodes
 
-      # Step 4: Apply Kubernetes manifests and track changed deployments
-      - name: Deploy to Kubernetes and track changes
-        id: track-changes
+      # Step 4: Apply Kubernetes manifests
+      - name: Deploy to Kubernetes
         run: |
-          namespace="otel-demo"
-          changed_deployments=()
-
-          echo "Applying Kubernetes manifests and tracking changed deployments."
-          for manifest in $(find ./kubernetes/output -name '*.yaml'); do
-            if kubectl apply -f $manifest -n $namespace | grep -q "configured\|created"; then
-              deployment_name=$(kubectl get -f $manifest -n $namespace -o jsonpath='{.metadata.name}')
-              echo "Deployment changed or newly deployed: $deployment_name"
-              changed_deployments+=($deployment_name)
-            fi
-          done
-
-          # Save changed deployments for subsequent steps
-          echo "changed_deployments=${changed_deployments[*]}" >> $GITHUB_ENV
-      
+          kubectl apply --namespace otel-demo -f ./kubernetes/output --recursive
+          
       # Step 5: Wait for roll out
       - name: Wait for all deployments to roll out
         run: |
-          namespace="otel-demo"
-          for deployment in ${{ env.changed_deployments }}; do
+          namespace="otel-demo" # Update with your namespace
+          for deployment in $(kubectl get deployments -n $namespace -o jsonpath='{.items[*].metadata.name}'); do
               echo "Checking rollout status for deployment: $deployment"
               kubectl rollout status deployment/$deployment -n $namespace
           done
-
+      
       - name: Validate application health
         run: |
           namespace="otel-demo"
@@ -123,13 +109,12 @@ jobs:
             exit 1
           fi
 
-      # Rollback on failure
-      - name: Rollback changed deployments
+      - name: Rollback on failure
         if: failure()
         run: |
-          echo "Deployment failed. Rolling back the last stable version for changed deployments."
+          echo "Deployment failed. Rolling back to the last stable version."
           namespace="otel-demo"
-          for deployment in ${{ env.changed_deployments }}; do
+          for deployment in $(kubectl get deployments -n $namespace -o jsonpath='{.items[*].metadata.name}'); do
               echo "Rolling back deployment: $deployment"
               if kubectl rollout undo deployment/$deployment -n $namespace; then
                 echo "Rollback successful for deployment: $deployment"
