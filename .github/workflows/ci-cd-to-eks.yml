@@ -119,6 +119,6 @@ jobs:
               if kubectl rollout undo deployment/$deployment -n $namespace; then
                 echo "Rollback successful for deployment: $deployment"
               else
-                echo "Rollback failed for deployment: $deployment"
+                echo "Rollback failed or skipped for deployment: $deployment"
               fi
           done
